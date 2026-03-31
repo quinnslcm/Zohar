@@ -1,0 +1,9 @@
+# allow crawling everything by default
+User-agent: *
+Disallow:
+
+Sitemap: https://zoharsecurity.com/sitemap.xml
+
+# LLM / AI crawler summary
+# See https://zoharsecurity.com/llms.txt
+# Extended version: https://zoharsecurity.com/llms-full.txt
