@@ -584,7 +584,7 @@
 
 <footer id="contact" class="bg-light">
     <div class="container">
-        <h2 tabindex="0">Zohar Global Security, Inc.</h2>
+        <h2 tabindex="0">Zohar Global Security</h2>
         <p class="section-intro">
             For an initial consultation, fee schedule, or references.
         </p>
@@ -598,8 +598,9 @@
             >
         </div>
         <p class="copyright">
-            &copy; {new Date().getFullYear()} Zohar Global Security, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Zohar Global Security. All rights reserved.
         </p>
+        <p class="legal">ZGS LLC &middot; 5013 S Louise Ave #1521, Sioux Falls, SD 57108</p>
     </div>
 </footer>
 
@@ -929,6 +930,14 @@
         margin-top: var(--spacing-2xl);
         font-size: var(--font-size-small);
         color: var(--c-text-muted);
+    }
+
+    .legal {
+        margin-top: var(--spacing-xs);
+        font-size: 11px;
+        color: var(--c-text-muted);
+        opacity: 0.6;
+        letter-spacing: 0.02em;
     }
 
     /* ── Responsive ─────────────────────────── */
