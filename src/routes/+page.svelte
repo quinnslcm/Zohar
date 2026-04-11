@@ -7,31 +7,64 @@
         const ctx = canvasEl.getContext("2d");
         const header = canvasEl.parentElement;
         let animId;
-        let time = 0;
+        const words = [
+            "PROTECT", "SECURE", "SHIELD", "INTEL", "ASSESS",
+            "EXTRACT", "SURVEIL", "ENCRYPT", "DEFEND", "ESCORT",
+            "RECON", "THREAT", "SWEEP", "COVERT", "TACTICAL",
+            "VANGUARD", "PERIMETER", "CLEARANCE", "PROTOCOL", "SENTINEL",
+            "DISPATCH", "OVERRIDE", "CLASSIFIED", "OPERATIVE", "WATCHPOINT",
+        ];
+        const particles = [];
+        const maxParticles = 50;
+        const asciiChars = "/:.*\\|+=#{}&@$%!?<>[]()~^-_01";
+        // Pre-generate a static grid of random chars
+        let grid = [];
+        const cellSize = 12;
+        let gridCols = 0, gridRows = 0;
 
-        // Simple 2D noise using sine combinations
-        function noise(x, y, t) {
-            return (
-                Math.sin(x * 0.02 + t * 0.3) * Math.cos(y * 0.018 + t * 0.2) +
-                Math.sin((x + y) * 0.015 + t * 0.25) * 0.5 +
-                Math.cos(x * 0.03 - y * 0.01 + t * 0.15) * 0.3
-            );
+        function buildGrid() {
+            gridCols = Math.ceil(canvasEl.width / cellSize);
+            gridRows = Math.ceil(canvasEl.height / cellSize);
+            grid = [];
+            for (let r = 0; r < gridRows; r++) {
+                const row = [];
+                for (let c = 0; c < gridCols; c++) {
+                    row.push(asciiChars[Math.floor(Math.random() * asciiChars.length)]);
+                }
+                grid.push(row);
+            }
         }
 
         function resize() {
             const rect = header.getBoundingClientRect();
             canvasEl.width = rect.width;
             canvasEl.height = rect.height;
+            buildGrid();
         }
 
         resize();
         window.addEventListener("resize", resize);
+
+        let tick = 0;
 
         header.addEventListener("mousemove", (e) => {
             const rect = header.getBoundingClientRect();
             mx = e.clientX - rect.left;
             my = e.clientY - rect.top;
             hovering = true;
+
+            // Spawn security words
+            if (particles.length < maxParticles && Math.random() < 0.25) {
+                particles.push({
+                    word: words[Math.floor(Math.random() * words.length)],
+                    x: mx + (Math.random() - 0.5) * 350,
+                    y: my + (Math.random() - 0.5) * 250,
+                    vy: -0.15 - Math.random() * 0.3,
+                    life: 1,
+                    decay: 0.003 + Math.random() * 0.003,
+                    size: 10 + Math.random() * 3,
+                });
+            }
         });
 
         header.addEventListener("mouseleave", () => {
@@ -39,39 +72,66 @@
         });
 
         function draw() {
-            time += 0.01;
+            tick++;
             ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
             const target = hovering ? 1 : 0;
-            opacity += (target - opacity) * 0.05;
+            opacity += (target - opacity) * 0.04;
 
-            if (opacity > 0.003) {
-                const step = 8;
-                const radius = 350;
+            if (opacity > 0.005) {
+                const radius = 420;
 
-                for (let x = 0; x < canvasEl.width; x += step) {
-                    for (let y = 0; y < canvasEl.height; y += step) {
+                // Slowly mutate a few random grid chars for subtle movement
+                if (tick % 3 === 0) {
+                    for (let i = 0; i < 40; i++) {
+                        const r = Math.floor(Math.random() * gridRows);
+                        const c = Math.floor(Math.random() * gridCols);
+                        if (grid[r]) grid[r][c] = asciiChars[Math.floor(Math.random() * asciiChars.length)];
+                    }
+                }
+
+                // Draw ASCII field behind cursor
+                ctx.font = `${cellSize}px monospace`;
+                for (let r = 0; r < gridRows; r++) {
+                    const y = r * cellSize;
+                    const dy = y - my;
+                    if (Math.abs(dy) > radius) continue;
+
+                    for (let c = 0; c < gridCols; c++) {
+                        const x = c * cellSize;
                         const dx = x - mx;
-                        const dy = y - my;
                         const dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist > radius) continue;
 
                         const falloff = 1 - dist / radius;
-                        const n = noise(x, y, time);
-                        const angle = n * Math.PI * 2;
-                        const len = 4 + falloff * 6;
+                        const alpha = falloff * falloff * opacity * 0.09;
+                        if (alpha < 0.004) continue;
 
-                        const alpha = falloff * falloff * opacity * 0.15;
-                        if (alpha < 0.003) continue;
-
-                        const hue = 180 + n * 30;
-                        ctx.strokeStyle = `hsla(${hue}, 50%, 55%, ${alpha})`;
-                        ctx.lineWidth = 0.8 + falloff * 0.6;
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
-                        ctx.stroke();
+                        const hue = 195 + (falloff * 15);
+                        const lightness = 40 + falloff * 25;
+                        ctx.fillStyle = `hsla(${hue}, 55%, ${lightness}%, ${alpha})`;
+                        ctx.fillText(grid[r][c], x, y);
                     }
+                }
+
+                // Draw floating security words on top
+                ctx.textAlign = "left";
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.y += p.vy;
+                    p.life -= p.decay;
+
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+
+                    const alpha = p.life * opacity * 0.18;
+                    if (alpha < 0.005) continue;
+
+                    ctx.font = `600 ${p.size}px 'Inter', sans-serif`;
+                    ctx.fillStyle = `hsla(200, 60%, 55%, ${alpha})`;
+                    ctx.fillText(p.word, p.x, p.y);
                 }
             }
 
