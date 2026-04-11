@@ -1,11 +1,9 @@
 <script>
-	import favicon from '$lib/assets/logomark.svg';
-
 	let { children } = $props();
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/logo.png" />
+	<link rel="icon" type="image/png" href="/favicon.png" />
 	<meta name="theme-color" content="hsl(200, 20%, 5%)" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />

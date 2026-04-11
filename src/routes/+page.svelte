@@ -7,15 +7,7 @@
         const ctx = canvasEl.getContext("2d");
         const header = canvasEl.parentElement;
         let animId;
-        const words = [
-            "PROTECT", "SECURE", "SHIELD", "INTEL", "ASSESS",
-            "EXTRACT", "SURVEIL", "ENCRYPT", "DEFEND", "ESCORT",
-            "RECON", "THREAT", "SWEEP", "COVERT", "TACTICAL",
-            "VANGUARD", "PERIMETER", "CLEARANCE", "PROTOCOL", "SENTINEL",
-            "DISPATCH", "OVERRIDE", "CLASSIFIED", "OPERATIVE", "WATCHPOINT",
-        ];
-        const particles = [];
-        const maxParticles = 50;
+        const asciiOnly = true;
         const asciiChars = "/:.*\\|+=#{}&@$%!?<>[]()~^-_01";
         // Pre-generate a static grid of random chars
         let grid = [];
@@ -53,18 +45,6 @@
             my = e.clientY - rect.top;
             hovering = true;
 
-            // Spawn security words
-            if (particles.length < maxParticles && Math.random() < 0.25) {
-                particles.push({
-                    word: words[Math.floor(Math.random() * words.length)],
-                    x: mx + (Math.random() - 0.5) * 350,
-                    y: my + (Math.random() - 0.5) * 250,
-                    vy: -0.15 - Math.random() * 0.3,
-                    life: 1,
-                    decay: 0.003 + Math.random() * 0.003,
-                    size: 10 + Math.random() * 3,
-                });
-            }
         });
 
         header.addEventListener("mouseleave", () => {
@@ -107,31 +87,11 @@
                         const alpha = falloff * falloff * opacity * 0.09;
                         if (alpha < 0.004) continue;
 
-                        const hue = 195 + (falloff * 15);
-                        const lightness = 40 + falloff * 25;
-                        ctx.fillStyle = `hsla(${hue}, 55%, ${lightness}%, ${alpha})`;
+                        const hue = 200 + (falloff * 10);
+                        const lightness = 45 + falloff * 20;
+                        ctx.fillStyle = `hsla(${hue}, 75%, ${lightness}%, ${alpha * 2})`;
                         ctx.fillText(grid[r][c], x, y);
                     }
-                }
-
-                // Draw floating security words on top
-                ctx.textAlign = "left";
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.y += p.vy;
-                    p.life -= p.decay;
-
-                    if (p.life <= 0) {
-                        particles.splice(i, 1);
-                        continue;
-                    }
-
-                    const alpha = p.life * opacity * 0.18;
-                    if (alpha < 0.005) continue;
-
-                    ctx.font = `600 ${p.size}px 'Inter', sans-serif`;
-                    ctx.fillStyle = `hsla(200, 60%, 55%, ${alpha})`;
-                    ctx.fillText(p.word, p.x, p.y);
                 }
             }
 
