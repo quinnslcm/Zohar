@@ -217,7 +217,7 @@
     <canvas use:initCanvas class="header-canvas" aria-hidden="true"></canvas>
     <div class="container">
         <div class="brand">
-            <LogoMark size={32} color="var(--c-accent)" />
+            <img src="/logo.png" alt="Zohar Global Security" class="brand-logo" />
             <span class="brand-name">Zohar Global Security</span>
         </div>
 
@@ -639,6 +639,11 @@
         align-items: center;
         gap: 12px;
         margin-bottom: var(--spacing-xl);
+    }
+
+    .brand-logo {
+        width: 36px;
+        height: auto;
     }
 
     .brand-name {

@@ -79,7 +79,7 @@
 <header>
     <div class="container">
         <a href="/" class="brand">
-            <LogoMark size={32} color="var(--c-accent)" />
+            <img src="/logo.png" alt="Zohar Global Security" class="brand-logo" />
             <span class="brand-name">Zohar Global Security</span>
         </a>
     </div>
