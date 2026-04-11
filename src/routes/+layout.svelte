@@ -3,7 +3,9 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" type="image/png" href="/favicon.png" />
+	<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 	<meta name="theme-color" content="hsl(200, 20%, 5%)" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
