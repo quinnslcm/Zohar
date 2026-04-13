@@ -1,5 +1,106 @@
 <script>
 	let { children } = $props();
+
+	function initGridOverlay(canvasEl) {
+		const ctx = canvasEl.getContext("2d");
+		let animId;
+		let mx = -9999, my = -9999;
+		const hexChars = "0123456789ABCDEF";
+		const cellSize = 40;
+
+		function resize() {
+			canvasEl.width = window.innerWidth;
+			canvasEl.height = window.innerHeight;
+		}
+
+		resize();
+		window.addEventListener("resize", resize);
+
+		window.addEventListener("mousemove", (e) => {
+			mx = e.clientX;
+			my = e.clientY;
+		});
+
+		function draw() {
+			ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+			const radius = 300;
+
+			// Grid lines near cursor
+			ctx.lineWidth = 0.5;
+			const startCol = Math.floor((mx - radius) / cellSize);
+			const endCol = Math.ceil((mx + radius) / cellSize);
+			const startRow = Math.floor((my - radius) / cellSize);
+			const endRow = Math.ceil((my + radius) / cellSize);
+
+			for (let col = startCol; col <= endCol; col++) {
+				const x = col * cellSize;
+				const dx = Math.abs(x - mx);
+				if (dx > radius) continue;
+				const fade = 1 - dx / radius;
+				ctx.strokeStyle = `hsla(200, 50%, 45%, ${fade * fade * 0.06})`;
+				ctx.beginPath();
+				ctx.moveTo(x, Math.max(0, my - radius));
+				ctx.lineTo(x, Math.min(canvasEl.height, my + radius));
+				ctx.stroke();
+			}
+
+			for (let row = startRow; row <= endRow; row++) {
+				const y = row * cellSize;
+				const dy = Math.abs(y - my);
+				if (dy > radius) continue;
+				const fade = 1 - dy / radius;
+				ctx.strokeStyle = `hsla(200, 50%, 45%, ${fade * fade * 0.06})`;
+				ctx.beginPath();
+				ctx.moveTo(Math.max(0, mx - radius), y);
+				ctx.lineTo(Math.min(canvasEl.width, mx + radius), y);
+				ctx.stroke();
+			}
+
+			// Crosshairs at intersections + hex values
+			ctx.font = "7px monospace";
+			for (let col = startCol; col <= endCol; col++) {
+				for (let row = startRow; row <= endRow; row++) {
+					const x = col * cellSize;
+					const y = row * cellSize;
+					const dx = x - mx;
+					const dy = y - my;
+					const dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist > radius) continue;
+
+					const falloff = 1 - dist / radius;
+					const alpha = falloff * falloff * 0.12;
+
+					// Small crosshair
+					ctx.strokeStyle = `hsla(200, 55%, 50%, ${alpha})`;
+					ctx.lineWidth = 0.5;
+					ctx.beginPath();
+					ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y);
+					ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3);
+					ctx.stroke();
+
+					// Hex value near intersection
+					if (falloff > 0.3) {
+						const h1 = hexChars[Math.floor(Math.random() * 16)];
+						const h2 = hexChars[Math.floor(Math.random() * 16)];
+						ctx.fillStyle = `hsla(200, 50%, 50%, ${alpha * 0.5})`;
+						ctx.fillText(h1 + h2, x + 5, y - 3);
+					}
+				}
+			}
+
+			animId = requestAnimationFrame(draw);
+		}
+
+		draw();
+
+		return {
+			destroy() {
+				cancelAnimationFrame(animId);
+				window.removeEventListener("resize", resize);
+			}
+		};
+	}
 </script>
 
 <svelte:head>
@@ -12,9 +113,26 @@
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </svelte:head>
 
+<canvas use:initGridOverlay class="grid-overlay" aria-hidden="true"></canvas>
 {@render children()}
 
 <style>
+	.grid-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		pointer-events: none;
+		z-index: 9999;
+	}
+
+	@media (max-width: 768px) {
+		.grid-overlay {
+			display: none;
+		}
+	}
+
 	:global(:root) {
 		/* Colors — 60-30-10-3-1 Palette */
 		--c-base: hsl(200, 20%, 5%);
