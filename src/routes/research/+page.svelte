@@ -493,6 +493,7 @@
             <span class="divider" aria-hidden="true">|</span>
             <a href="mailto:info@zoharsecurity.com">info@zoharsecurity.com</a>
         </div>
+        <a href="/" class="back-home">&larr; Return to Home</a>
         <p class="copyright">
             &copy; {new Date().getFullYear()} Zohar Global Security. All rights reserved.
         </p>
@@ -520,12 +521,17 @@
         margin-bottom: var(--spacing-xl);
     }
 
+    .brand-logo {
+        width: 36px;
+        height: auto;
+    }
+
     .brand-name {
-        font-size: var(--font-size-small);
+        font-size: 13px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.2em;
         color: var(--c-accent);
-        font-weight: 600;
+        font-weight: 500;
     }
 
     /* ── Page Hero ──────────────────────────── */
@@ -800,5 +806,15 @@
         .paper-card {
             padding: var(--spacing-md);
         }
+    }
+
+    .back-home {
+        display: inline-block;
+        margin-top: var(--spacing-lg);
+        font-size: 13px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--c-accent);
     }
 </style>
