@@ -1,99 +1,290 @@
 <script>
     import LogoMark from "$lib/components/LogoMark.svelte";
 
-    let mx = 0, my = 0, hovering = false, opacity = 0;
-
     function initCanvas(canvasEl) {
         const ctx = canvasEl.getContext("2d");
         const header = canvasEl.parentElement;
         let animId;
-        const asciiOnly = true;
-        const asciiChars = "/:.*\\|+=#{}&@$%!?<>[]()~^-_01";
-        // Pre-generate a static grid of random chars
-        let grid = [];
-        const cellSize = 12;
-        let gridCols = 0, gridRows = 0;
+        let rotation = 0;
+        let mx = 0, my = 0;
+        let tiltX = 0, tiltY = 0;
+        const PI2 = Math.PI * 2;
+        const hexChars = "0123456789ABCDEF";
 
-        function buildGrid() {
-            gridCols = Math.ceil(canvasEl.width / cellSize);
-            gridRows = Math.ceil(canvasEl.height / cellSize);
-            grid = [];
-            for (let r = 0; r < gridRows; r++) {
-                const row = [];
-                for (let c = 0; c < gridCols; c++) {
-                    row.push(asciiChars[Math.floor(Math.random() * asciiChars.length)]);
-                }
-                grid.push(row);
+        // Generate hex data blocks
+        const hexBlocks = [];
+        for (let i = 0; i < 8; i++) {
+            let line = "";
+            for (let j = 0; j < 20; j++) {
+                line += hexChars[Math.floor(Math.random() * 16)];
+                line += hexChars[Math.floor(Math.random() * 16)];
+                if (j < 19) line += " ";
             }
+            hexBlocks.push(line);
+        }
+
+        // Security labels
+        const labels = [
+            "THREAT LEVEL: LOW", "PERIMETER: SECURE", "ENCRYPTION: AES-256",
+            "PROTOCOL: ACTIVE", "SIGNAL: ENCRYPTED", "STATUS: MONITORING",
+            "CLEARANCE: ALPHA", "FREQ: 142.8 MHz"
+        ];
+
+        // Floating data points on globe
+        const dataPoints = [];
+        for (let i = 0; i < 30; i++) {
+            dataPoints.push({
+                lat: (Math.random() - 0.5) * Math.PI,
+                lon: Math.random() * PI2,
+                pulse: Math.random() * PI2,
+                size: 1 + Math.random() * 2,
+            });
+        }
+
+        // Connection lines between some points
+        const connections = [];
+        for (let i = 0; i < 12; i++) {
+            connections.push([
+                Math.floor(Math.random() * dataPoints.length),
+                Math.floor(Math.random() * dataPoints.length),
+            ]);
         }
 
         function resize() {
             const rect = header.getBoundingClientRect();
             canvasEl.width = rect.width;
             canvasEl.height = rect.height;
-            buildGrid();
         }
 
         resize();
         window.addEventListener("resize", resize);
 
-        let tick = 0;
-
         header.addEventListener("mousemove", (e) => {
             const rect = header.getBoundingClientRect();
-            mx = e.clientX - rect.left;
-            my = e.clientY - rect.top;
-            hovering = true;
-
+            mx = (e.clientX - rect.left) / rect.width;
+            my = (e.clientY - rect.top) / rect.height;
         });
 
-        header.addEventListener("mouseleave", () => {
-            hovering = false;
-        });
+        function project(lat, lon, cx, cy, r) {
+            // Apply mouse tilt
+            const cosT = Math.cos(tiltX);
+            const sinT = Math.sin(tiltX);
+            const cosP = Math.cos(tiltY);
+            const sinP = Math.sin(tiltY);
 
-        function draw() {
-            tick++;
-            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            // Spherical to cartesian
+            let x0 = Math.cos(lat) * Math.sin(lon + rotation);
+            let y0 = Math.sin(lat);
+            let z0 = Math.cos(lat) * Math.cos(lon + rotation);
 
-            const target = hovering ? 1 : 0;
-            opacity += (target - opacity) * 0.04;
+            // Rotate around X axis (vertical mouse)
+            let y1 = y0 * cosT - z0 * sinT;
+            let z1 = y0 * sinT + z0 * cosT;
 
-            if (opacity > 0.005) {
-                const radius = 420;
+            // Rotate around Y axis (horizontal mouse)
+            let x1 = x0 * cosP + z1 * sinP;
+            let z2 = -x0 * sinP + z1 * cosP;
 
-                // Slowly mutate a few random grid chars for subtle movement
-                if (tick % 3 === 0) {
-                    for (let i = 0; i < 40; i++) {
-                        const r = Math.floor(Math.random() * gridRows);
-                        const c = Math.floor(Math.random() * gridCols);
-                        if (grid[r]) grid[r][c] = asciiChars[Math.floor(Math.random() * asciiChars.length)];
+            return { x: cx + r * x1, y: cy - r * y1, z: z2 };
+        }
+
+        function drawGlobe(cx, cy, r, alpha) {
+            // Outer ring
+            ctx.strokeStyle = `hsla(200, 60%, 45%, ${alpha * 0.4})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, PI2);
+            ctx.stroke();
+
+            // Second ring
+            ctx.strokeStyle = `hsla(200, 60%, 45%, ${alpha * 0.15})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 1.08, 0, PI2);
+            ctx.stroke();
+
+            // Latitude lines
+            for (let lat = -60; lat <= 60; lat += 30) {
+                const latRad = (lat * Math.PI) / 180;
+                ctx.strokeStyle = `hsla(200, 50%, 50%, ${alpha * 0.15})`;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                let started = false;
+                for (let lon = 0; lon <= 360; lon += 5) {
+                    const lonRad = (lon * Math.PI) / 180;
+                    const p = project(latRad, lonRad, cx, cy, r);
+                    if (p.z > 0) {
+                        if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+                        else ctx.lineTo(p.x, p.y);
+                    } else {
+                        started = false;
                     }
                 }
+                ctx.stroke();
+            }
 
-                // Draw ASCII field behind cursor
-                ctx.font = `${cellSize}px monospace`;
-                for (let r = 0; r < gridRows; r++) {
-                    const y = r * cellSize;
-                    const dy = y - my;
-                    if (Math.abs(dy) > radius) continue;
-
-                    for (let c = 0; c < gridCols; c++) {
-                        const x = c * cellSize;
-                        const dx = x - mx;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist > radius) continue;
-
-                        const falloff = 1 - dist / radius;
-                        const alpha = falloff * falloff * opacity * 0.09;
-                        if (alpha < 0.004) continue;
-
-                        const hue = 200 + (falloff * 10);
-                        const lightness = 45 + falloff * 20;
-                        ctx.fillStyle = `hsla(${hue}, 75%, ${lightness}%, ${alpha * 2})`;
-                        ctx.fillText(grid[r][c], x, y);
+            // Longitude lines
+            for (let lon = 0; lon < 360; lon += 30) {
+                const lonRad = (lon * Math.PI) / 180;
+                ctx.strokeStyle = `hsla(200, 50%, 50%, ${alpha * 0.15})`;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                let started = false;
+                for (let lat = -90; lat <= 90; lat += 5) {
+                    const latRad = (lat * Math.PI) / 180;
+                    const p = project(latRad, lonRad, cx, cy, r);
+                    if (p.z > 0) {
+                        if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+                        else ctx.lineTo(p.x, p.y);
+                    } else {
+                        started = false;
                     }
+                }
+                ctx.stroke();
+            }
+
+            // Data points
+            const time = Date.now() * 0.001;
+            const projected = dataPoints.map(dp => {
+                const p = project(dp.lat, dp.lon, cx, cy, r);
+                return { ...p, ...dp };
+            });
+
+            for (const dp of projected) {
+                if (dp.z <= 0) continue;
+                const pulse = 0.5 + 0.5 * Math.sin(time * 2 + dp.pulse);
+                const s = dp.size * (1 + pulse * 0.5);
+                const a = alpha * (0.3 + dp.z * 0.5) * (0.6 + pulse * 0.4);
+                ctx.fillStyle = `hsla(200, 70%, 60%, ${a})`;
+                ctx.beginPath();
+                ctx.arc(dp.x, dp.y, s, 0, PI2);
+                ctx.fill();
+
+                // Pulse ring
+                if (pulse > 0.7) {
+                    ctx.strokeStyle = `hsla(200, 70%, 60%, ${a * 0.3})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.arc(dp.x, dp.y, s + 4 * pulse, 0, PI2);
+                    ctx.stroke();
                 }
             }
+
+            // Connection arcs between points
+            ctx.lineWidth = 0.5;
+            for (const [a, b] of connections) {
+                const pa = projected[a];
+                const pb = projected[b];
+                if (pa.z <= 0 || pb.z <= 0) continue;
+                const connAlpha = alpha * Math.min(pa.z, pb.z) * 0.25;
+                ctx.strokeStyle = `hsla(200, 60%, 55%, ${connAlpha})`;
+                ctx.beginPath();
+                ctx.moveTo(pa.x, pa.y);
+                // Curved arc through center-ish
+                const midX = (pa.x + pb.x) / 2 + (pa.y - pb.y) * 0.15;
+                const midY = (pa.y + pb.y) / 2 + (pb.x - pa.x) * 0.15;
+                ctx.quadraticCurveTo(midX, midY, pb.x, pb.y);
+                ctx.stroke();
+            }
+        }
+
+        function drawHUD(cx, cy, r, alpha) {
+            const time = Date.now() * 0.001;
+
+            // Hex data blocks — bottom right of globe
+            ctx.font = "9px monospace";
+            const hx = cx + r * 0.6;
+            const hy = cy + r * 0.7;
+            for (let i = 0; i < hexBlocks.length; i++) {
+                // Mutate some chars slowly
+                if (Math.random() < 0.02) {
+                    const arr = hexBlocks[i].split("");
+                    const pos = Math.floor(Math.random() * arr.length);
+                    if (arr[pos] !== " ") arr[pos] = hexChars[Math.floor(Math.random() * 16)];
+                    hexBlocks[i] = arr.join("");
+                }
+                ctx.fillStyle = `hsla(200, 50%, 50%, ${alpha * 0.12})`;
+                ctx.fillText(hexBlocks[i], hx, hy + i * 12);
+            }
+
+            // Security labels — top left area
+            ctx.font = "600 10px 'Inter', monospace";
+            const lx = cx - r * 1.3;
+            const ly = cy - r * 0.5;
+            for (let i = 0; i < 4; i++) {
+                const flicker = 0.7 + 0.3 * Math.sin(time * 1.5 + i * 2);
+                ctx.fillStyle = `hsla(200, 60%, 50%, ${alpha * 0.15 * flicker})`;
+                ctx.fillText(labels[i], lx, ly + i * 18);
+            }
+
+            // More labels — bottom left
+            for (let i = 4; i < labels.length; i++) {
+                const flicker = 0.7 + 0.3 * Math.sin(time * 1.2 + i * 3);
+                ctx.fillStyle = `hsla(200, 60%, 50%, ${alpha * 0.12 * flicker})`;
+                ctx.fillText(labels[i], lx, cy + r * 0.4 + (i - 4) * 18);
+            }
+
+            // Scanning line on globe
+            const scanAngle = time * 0.8 % PI2;
+            const scanX = cx + Math.cos(scanAngle) * r * 1.1;
+            const scanY = cy + Math.sin(scanAngle) * r * 1.1;
+            ctx.strokeStyle = `hsla(200, 70%, 55%, ${alpha * 0.08})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(scanX, scanY);
+            ctx.stroke();
+
+            // Corner brackets
+            const br = r * 1.15;
+            const bLen = 20;
+            ctx.strokeStyle = `hsla(200, 50%, 50%, ${alpha * 0.2})`;
+            ctx.lineWidth = 1;
+            // Top-left
+            ctx.beginPath();
+            ctx.moveTo(cx - br, cy - br + bLen); ctx.lineTo(cx - br, cy - br); ctx.lineTo(cx - br + bLen, cy - br);
+            ctx.stroke();
+            // Top-right
+            ctx.beginPath();
+            ctx.moveTo(cx + br - bLen, cy - br); ctx.lineTo(cx + br, cy - br); ctx.lineTo(cx + br, cy - br + bLen);
+            ctx.stroke();
+            // Bottom-left
+            ctx.beginPath();
+            ctx.moveTo(cx - br, cy + br - bLen); ctx.lineTo(cx - br, cy + br); ctx.lineTo(cx - br + bLen, cy + br);
+            ctx.stroke();
+            // Bottom-right
+            ctx.beginPath();
+            ctx.moveTo(cx + br - bLen, cy + br); ctx.lineTo(cx + br, cy + br); ctx.lineTo(cx + br, cy + br - bLen);
+            ctx.stroke();
+
+            // Crosshair at center
+            ctx.strokeStyle = `hsla(200, 50%, 50%, ${alpha * 0.08})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - 15, cy); ctx.lineTo(cx + 15, cy);
+            ctx.moveTo(cx, cy - 15); ctx.lineTo(cx, cy + 15);
+            ctx.stroke();
+        }
+
+        function draw() {
+            rotation += 0.003;
+
+            // Smoothly lerp tilt toward mouse position
+            const targetTiltX = (my - 0.5) * 0.5;
+            const targetTiltY = (mx - 0.5) * 0.5;
+            tiltX += (targetTiltX - tiltX) * 0.03;
+            tiltY += (targetTiltY - tiltY) * 0.03;
+
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+            // Globe positioned to far right, vertically centered
+            const cx = canvasEl.width * 0.82;
+            const cy = canvasEl.height * 0.45;
+            const r = Math.min(canvasEl.width, canvasEl.height) * 0.25;
+
+            const alpha = 0.9; // Always visible, subtle
+
+            drawGlobe(cx, cy, r, alpha);
+            drawHUD(cx, cy, r, alpha);
 
             animId = requestAnimationFrame(draw);
         }
@@ -652,6 +843,12 @@
         width: 100%;
         height: 100%;
         pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+        .header-canvas {
+            display: none;
+        }
     }
 
     .brand {
