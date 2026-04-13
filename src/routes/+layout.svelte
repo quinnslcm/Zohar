@@ -1,5 +1,48 @@
 <script>
+	import { onMount } from 'svelte';
+
 	let { children } = $props();
+	let loading = $state(true);
+	let progress = $state(0);
+	let statusText = $state('INITIALIZING');
+	let fadeOut = $state(false);
+
+	const statuses = [
+		'INITIALIZING',
+		'ESTABLISHING SECURE CONNECTION',
+		'ENCRYPTING CHANNEL',
+		'VERIFYING PROTOCOLS',
+		'SCANNING PERIMETER',
+		'SYSTEM READY'
+	];
+
+	onMount(() => {
+		let frame;
+		const start = Date.now();
+		const duration = 3500;
+
+		function tick() {
+			const elapsed = Date.now() - start;
+			const t = Math.min(elapsed / duration, 1);
+
+			// Ease-out progress
+			progress = Math.round(t * t * (3 - 2 * t) * 100);
+
+			// Cycle status text
+			const idx = Math.min(Math.floor(t * statuses.length), statuses.length - 1);
+			statusText = statuses[idx];
+
+			if (t < 1) {
+				frame = requestAnimationFrame(tick);
+			} else {
+				fadeOut = true;
+				setTimeout(() => { loading = false; }, 500);
+			}
+		}
+
+		frame = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(frame);
+	});
 
 	function initGridOverlay(canvasEl) {
 		const ctx = canvasEl.getContext("2d");
@@ -113,6 +156,56 @@
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </svelte:head>
 
+{#if loading}
+<div class="loader" class:fade-out={fadeOut}>
+	<div class="loader-inner">
+		<!-- Corner brackets -->
+		<div class="loader-brackets">
+			<span class="br br-tl"></span>
+			<span class="br br-tr"></span>
+			<span class="br br-bl"></span>
+			<span class="br br-br"></span>
+		</div>
+
+		<!-- Logo -->
+		<img src="/logo.png" alt="" class="loader-logo" />
+
+		<!-- Brand -->
+		<p class="loader-brand">ZOHAR GLOBAL SECURITY</p>
+
+		<!-- Progress bar -->
+		<div class="loader-bar-track">
+			<div class="loader-bar-fill" style="width: {progress}%"></div>
+		</div>
+
+		<!-- Status line -->
+		<div class="loader-status">
+			<span class="loader-status-text">{statusText}</span>
+			<span class="loader-pct">{progress}%</span>
+		</div>
+
+		<!-- Data readout -->
+		<div class="loader-data">
+			<div class="loader-data-row">
+				<span class="loader-data-label">CONN</span>
+				<span class="loader-data-val">AES-256-GCM</span>
+			</div>
+			<div class="loader-data-row">
+				<span class="loader-data-label">NODE</span>
+				<span class="loader-data-val">US-EAST-1 // ACTIVE</span>
+			</div>
+			<div class="loader-data-row">
+				<span class="loader-data-label">CERT</span>
+				<span class="loader-data-val">SHA-384 // VERIFIED</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Grid bg -->
+	<div class="loader-grid"></div>
+</div>
+{/if}
+
 <canvas use:initGridOverlay class="grid-overlay" aria-hidden="true"></canvas>
 {@render children()}
 
@@ -131,6 +224,156 @@
 		.grid-overlay {
 			display: none;
 		}
+	}
+
+	/* ── Loading Screen ──────────────────────── */
+	.loader {
+		position: fixed;
+		inset: 0;
+		z-index: 99999;
+		background: hsl(200, 20%, 5%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: opacity 0.5s ease;
+	}
+
+	.loader.fade-out {
+		opacity: 0;
+	}
+
+	.loader-inner {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 20px;
+		padding: 60px;
+	}
+
+	/* Corner brackets — lock-on animation */
+	.loader-brackets {
+		position: absolute;
+		inset: -20px;
+		animation: brackets-lock 3s ease-out forwards;
+	}
+
+	@keyframes brackets-lock {
+		0% { inset: -40px; opacity: 0; }
+		15% { opacity: 1; }
+		100% { inset: 0px; }
+	}
+
+	.br {
+		position: absolute;
+		width: 20px;
+		height: 20px;
+		border-color: hsla(200, 50%, 50%, 0.3);
+		border-style: solid;
+		transition: border-color 0.3s;
+	}
+
+	.loader.fade-out .br {
+		border-color: hsla(200, 50%, 50%, 0.6);
+	}
+
+	.br-tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
+	.br-tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
+	.br-bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+	.br-br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+	.loader-logo {
+		width: 48px;
+		height: auto;
+		animation: pulse-glow 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% { opacity: 0.6; filter: brightness(1); }
+		50% { opacity: 1; filter: brightness(1.3); }
+	}
+
+	.loader-brand {
+		font-family: 'Inter', sans-serif;
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.25em;
+		color: hsl(200, 50%, 50%);
+		text-align: center;
+	}
+
+	.loader-bar-track {
+		width: 200px;
+		height: 2px;
+		background: hsla(200, 20%, 20%, 0.5);
+		overflow: hidden;
+	}
+
+	.loader-bar-fill {
+		height: 100%;
+		background: hsl(200, 50%, 50%);
+		transition: width 0.1s linear;
+	}
+
+	.loader-status {
+		display: flex;
+		justify-content: space-between;
+		width: 200px;
+		font-family: monospace;
+		font-size: 9px;
+		color: hsla(200, 40%, 50%, 0.6);
+		letter-spacing: 0.05em;
+	}
+
+	.loader-pct {
+		color: hsl(200, 50%, 50%);
+	}
+
+	.loader-data {
+		margin-top: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		width: 200px;
+	}
+
+	.loader-data-row {
+		display: flex;
+		justify-content: space-between;
+		font-family: monospace;
+		font-size: 8px;
+		letter-spacing: 0.05em;
+		animation: data-fade 3.5s ease forwards;
+		opacity: 0;
+	}
+
+	.loader-data-row:nth-child(1) { animation-delay: 0.8s; }
+	.loader-data-row:nth-child(2) { animation-delay: 1.4s; }
+	.loader-data-row:nth-child(3) { animation-delay: 2.0s; }
+
+	@keyframes data-fade {
+		0% { opacity: 0; transform: translateY(4px); }
+		15% { opacity: 1; transform: translateY(0); }
+		100% { opacity: 1; transform: translateY(0); }
+	}
+
+	.loader-data-label {
+		color: hsla(200, 40%, 45%, 0.5);
+	}
+
+	.loader-data-val {
+		color: hsla(200, 50%, 55%, 0.4);
+	}
+
+	.loader-grid {
+		position: absolute;
+		inset: 0;
+		opacity: 0.03;
+		background-image:
+			linear-gradient(hsla(200, 50%, 50%, 0.5) 1px, transparent 1px),
+			linear-gradient(90deg, hsla(200, 50%, 50%, 0.5) 1px, transparent 1px);
+		background-size: 40px 40px;
+		pointer-events: none;
 	}
 
 	:global(:root) {
