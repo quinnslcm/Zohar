@@ -424,6 +424,22 @@
     })}</script>`}
 </svelte:head>
 
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="#" class="nav-brand">
+            <img src="/logo.png" alt="" class="nav-logo" />
+            <span>ZGS</span>
+        </a>
+        <div class="nav-links">
+            <a href="#who-we-protect">Protection</a>
+            <a href="#services">Services</a>
+            <a href="#about">Founder</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact" class="nav-cta">Contact</a>
+        </div>
+    </div>
+</nav>
+
 <header>
     <canvas use:initCanvas class="header-canvas" aria-hidden="true"></canvas>
     <div class="container">
@@ -464,6 +480,7 @@
                         leadership</a
                     >
                 </div>
+                <a href="#contact" class="cta-button">Schedule a Consultation</a>
                 <p class="cta-assurance">Prompt response. Confidential. No obligation.</p>
             </div>
         </div>
@@ -795,9 +812,9 @@
 
 <footer id="contact" class="bg-light">
     <div class="container">
-        <h2 tabindex="0">Zohar Global Security</h2>
+        <h2 tabindex="0">Begin a Confidential Conversation</h2>
         <p class="section-intro">
-            For an initial consultation, fee schedule, or references.
+            Every engagement starts with a private discussion. No obligation, no pressure — just a direct conversation about what matters to you and your family.
         </p>
         <div class="contact-links">
             <a href="tel:+17027430031">702-743-0031</a>
@@ -816,6 +833,107 @@
 </footer>
 
 <style>
+    /* ── Navigation ─────────────────────────── */
+    .site-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: hsla(200, 20%, 5%, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid hsla(200, 10%, 30%, 0.3);
+        padding: 0 var(--spacing-md);
+    }
+
+    .nav-inner {
+        max-width: var(--max-width-container);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 52px;
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        color: var(--c-heading);
+        text-decoration: none;
+    }
+
+    .nav-logo {
+        width: 22px;
+        height: auto;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .nav-links a {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        color: var(--c-text-muted);
+        text-decoration: none;
+        text-transform: uppercase;
+        transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+        color: var(--c-heading);
+        opacity: 1;
+    }
+
+    .nav-cta {
+        color: var(--c-heading) !important;
+        border: 1px solid hsla(200, 50%, 50%, 0.4);
+        padding: 6px 14px;
+        border-radius: 2px;
+        transition: all 0.2s !important;
+    }
+
+    .nav-cta:hover {
+        background: hsla(200, 50%, 50%, 0.15);
+        border-color: hsla(200, 50%, 50%, 0.6);
+    }
+
+    @media (max-width: 640px) {
+        .nav-links a:not(.nav-cta) {
+            display: none;
+        }
+    }
+
+    /* ── CTA Button ─────────────────────────── */
+    .cta-button {
+        display: inline-block;
+        margin-top: var(--spacing-lg);
+        padding: 14px 32px;
+        background: hsl(200, 50%, 50%);
+        color: white !important;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        border-radius: 2px;
+        transition: all 0.2s;
+    }
+
+    .cta-button:hover {
+        background: hsl(200, 55%, 45%);
+        opacity: 1 !important;
+        transform: translateY(-1px);
+    }
+
     /* ── Layout ─────────────────────────────── */
     .container {
         max-width: var(--max-width-container);
@@ -829,6 +947,7 @@
     header {
         position: relative;
         padding: 64px 0 var(--spacing-3xl);
+        padding-top: 100px;
         border-bottom: var(--border-width) solid var(--c-mute);
         min-height: 90vh;
         display: flex;
