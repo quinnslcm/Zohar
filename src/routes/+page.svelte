@@ -475,7 +475,7 @@
                         leadership</a
                     >
                 </div>
-                <a href="#contact" class="cta-button">Schedule a Consultation</a>
+                <a href="mailto:info@zoharsecurity.com?subject=Consultation%20Request" class="cta-button">Schedule a Consultation</a>
                 <p class="cta-assurance">Prompt response. Confidential. No obligation.</p>
             </div>
         </div>
