@@ -549,48 +549,32 @@
                         from military, government, and elite law enforcement
                         backgrounds.
                     </p>
-                    <ul class="protection-services">
-                        <li>
-                            <strong>Travel Security</strong> &mdash; Domestic or international.
-                            Commercial or private aviation. Armored ground transport
-                            or maritime. We plan the route, assess the risk, and place
-                            the right people at every point of transit.
-                        </li>
-                        <li>
-                            <strong>School and Campus Safety</strong> &mdash; We assess
-                            the physical layout, entry points, and emergency protocols
-                            of every institution your children attend. Then we close
-                            the gaps.
-                        </li>
-                        <li>
-                            <strong
-                                >Background Checks for Household and Executive
-                                Staff</strong
-                            > &mdash; Nannies, drivers, personal assistants, estate
-                            managers, new hires. We verify who is in proximity to
-                            your family before they get close.
-                        </li>
-                        <li>
-                            <strong
-                                >Cyber Protection and Forensic Data Services</strong
-                            > &mdash; Digital exposure is physical exposure. We protect
-                            your communications, devices, and data from surveillance,
-                            breaches, and exploitation.
-                        </li>
-                        <li>
-                            <strong
-                                >Investigations, Surveillance, and Counter
-                                Surveillance</strong
-                            > &mdash; When something feels wrong, we find out what
-                            it is. Discreetly. Our team conducts investigations, deploys
-                            surveillance, and detects if you are being watched or
-                            followed.
-                        </li>
-                        <li>
-                            <strong>Custom Security Plans</strong> &mdash; We can
-                            customize a security plan to the exact needs of your organization.
-                        </li>
-                    </ul>
+                    <div class="classified-list">
+                        <details class="classified-item">
+                            <summary><span class="classified-name">Travel Security</span></summary>
+                            <p>Domestic or international. Commercial or private aviation. Armored ground transport or maritime. We plan the route, assess the risk, and place the right people at every point of transit.</p>
+                        </details>
+                        <details class="classified-item">
+                            <summary><span class="classified-name">School and Campus Safety</span></summary>
+                            <p>We assess the physical layout, entry points, and emergency protocols of every institution your children attend. Then we close the gaps.</p>
+                        </details>
+                        <details class="classified-item">
+                            <summary><span class="classified-name">Background Checks for Household and Executive Staff</span></summary>
+                            <p>Nannies, drivers, personal assistants, estate managers, new hires. We verify who is in proximity to your family before they get close.</p>
+                        </details>
+                        <details class="classified-item">
+                            <summary><span class="classified-name">Cyber Protection and Forensic Data Services</span></summary>
+                            <p>Digital exposure is physical exposure. We protect your communications, devices, and data from surveillance, breaches, and exploitation.</p>
+                        </details>
+                        <details class="classified-item">
+                            <summary><span class="classified-name">Investigations, Surveillance, and Counter Surveillance</span></summary>
+                            <p>When something feels wrong, we find out what it is. Discreetly. Our team conducts investigations, deploys surveillance, and detects if you are being watched or followed.</p>
+                        </details>
+                        <details class="classified-item">
+                            <summary><span class="classified-name">Custom Security Plans</span></summary>
+                            <p>We can customize a security plan to the exact needs of your organization.</p>
+                        </details>
+                    </div>
                 </article>
 
                 <article>
@@ -1141,23 +1125,63 @@
         color: var(--c-heading);
     }
 
-    /* ── Protection Services List ─────────── */
-    .protection-services {
-        list-style: none;
+    /* ── Classified Services List ─────────── */
+    .classified-list {
         margin-top: var(--spacing-md);
         padding-top: var(--spacing-md);
         border-top: var(--border-width) solid var(--c-mute);
         display: grid;
-        gap: var(--spacing-sm);
+        gap: 0;
     }
 
-    .protection-services li {
-        line-height: var(--line-height-relaxed);
+    .classified-item {
+        border-bottom: var(--border-width) solid var(--c-mute);
+    }
+
+    .classified-item summary {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-sm);
+        padding: 14px 0;
+        list-style: none;
+    }
+
+    .classified-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .classified-item summary::after {
+        content: "[+]";
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--c-accent);
+        opacity: 0.4;
+        flex-shrink: 0;
+        transition: opacity 0.2s;
+    }
+
+    .classified-item summary:hover::after {
+        opacity: 0.8;
+    }
+
+    .classified-item[open] summary::after {
+        content: "[-]";
+    }
+
+    .classified-name {
+        font-weight: 600;
+        color: var(--c-heading);
         font-size: var(--font-size-base);
     }
 
-    .protection-services strong {
-        color: var(--c-heading);
+    .classified-item p {
+        padding: 0 0 14px;
+        line-height: var(--line-height-relaxed);
+        color: var(--c-text);
+        max-width: var(--max-width-prose);
+        font-variant-ligatures: none;
     }
 
     /* ── About — Layout with Photo ──────────── */
