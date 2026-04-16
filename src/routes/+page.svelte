@@ -428,7 +428,7 @@
     <div class="nav-inner">
         <a href="#" class="nav-brand">
             <img src="/logo.png" alt="" class="nav-logo" />
-            <span>ZGS</span>
+            <span>Zohar Global Security</span>
         </a>
         <div class="nav-links">
             <a href="#who-we-protect">Protection</a>
@@ -443,11 +443,6 @@
 <header>
     <canvas use:initCanvas class="header-canvas" aria-hidden="true"></canvas>
     <div class="container">
-        <div class="brand">
-            <img src="/logo.png" alt="Zohar Global Security" class="brand-logo" />
-            <span class="brand-name">Zohar Global Security</span>
-        </div>
-
         <div class="hero-grid">
             <div class="hero-text">
                 <h1 tabindex="0">
@@ -859,11 +854,12 @@
     .nav-brand {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.15em;
-        color: var(--c-heading);
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--c-accent);
         text-decoration: none;
     }
 
